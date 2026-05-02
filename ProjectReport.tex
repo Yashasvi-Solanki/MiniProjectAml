@@ -173,18 +173,6 @@
 \newpage
 
 % ==========================================
-% 1. EXECUTIVE SUMMARY
-% ==========================================
-\section{Executive Summary}
-To design, implement, and evaluate a robust Dual-Pipeline Machine Learning architecture featuring both Continuous Regression and Multinomial Classification. The project is split into two distinct analytical challenges:
-
-1. \textbf{Continuous Regression (Diamonds Dataset):} Predicting the exact continuous market price of diamonds using physical characteristics, highlighting linear models and L1/L2 Regularization to manage feature importance.
-
-2. \textbf{Multinomial Classification (Water Potability Dataset):} Classifying water samples into three distinct potability categories (Unsafe, Marginal, Safe) utilizing Ensemble Methods, Spatial Algorithms, and advanced resampling techniques to handle class imbalance.
-
-By successfully tackling both continuous target prediction and discrete multi-class categorization, this project establishes a holistic workflow demonstrating data leakage prevention, mathematical scaling, synthetic resampling (SMOTE), and rigorous performance evaluation via Mean Squared Error ($MSE$) and Weighted F1-Scores.
-
-% ==========================================
 % 2. PROBLEM STATEMENT & OBJECTIVES
 % ==========================================
 \section{Problem Statement \& Objectives}
@@ -204,46 +192,29 @@ Second, determining environmental safety (Water Potability) across a multi-class
 \end{itemize}
 
 % ==========================================
-% 3. DATASET DETAILS
+% DATASET & PARTITION DETAILS
 % ==========================================
-\section{Dataset Details}
-This project leverages two distinct datasets sourced dynamically from KaggleHub:
-
-\subsection{Dataset 1: Diamonds (Regression Task)}
-The Diamonds dataset contains over 53,000 records detailing the physical dimensions and quality of diamonds alongside their continuous market price.
+\section{Dataset \& Partition Details}
+This project leverages two distinct datasets. The table below summarizes their total size, feature counts, and how they were partitioned for training, testing, and SMOTE resampling.
 
 \begin{table}[H]
     \centering
-    \caption{Diamonds Dataset Overview}
-    \renewcommand{\arraystretch}{1.4}
-    \begin{tabular}{@{}lp{10cm}@{}}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabularx}{\textwidth}{@{}l >{\hsize=0.9\hsize}X >{\hsize=1.1\hsize}X@{}}
         \toprule
-        \textbf{Dataset Attribute} & \textbf{Description} \\
+        \textbf{Metric} & \textbf{Diamonds (Regression)} & \textbf{Water Potability (Classification)} \\
         \midrule
-        \textbf{Base Dataset} & Diamonds (\texttt{shivam2503/diamonds}) \\
-        \textbf{Continuous Features} & carat, depth, table, x, y, z \\
-        \textbf{Categorical Features} & cut, color, clarity \\
-        \textbf{Target Variable} & \texttt{price} (Continuous numerical value) \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\subsection{Dataset 2: Water Potability (Classification Task)}
-The base Water Potability dataset contains 3,276 records with 9 continuous features. To enable multinomial training, we synthesized a 3-tier target variable (\texttt{Potability\_Class}) using \texttt{pandas.qcut()} on the median-imputed \texttt{pH} column.
-
-\begin{table}[H]
-    \centering
-    \caption{Water Potability Dataset Overview}
-    \renewcommand{\arraystretch}{1.4}
-    \begin{tabular}{@{}lp{10cm}@{}}
-        \toprule
-        \textbf{Dataset Attribute} & \textbf{Description} \\
+        \textbf{Total Data Rows} & $\sim$53,940 & 3,276 \\
+        \textbf{Total Features} & 9 (6 Continuous, 3 Categorical) & 9 (All Continuous) \\
+        \textbf{Target Variable} & \texttt{price} (Continuous) & \texttt{Potability\_Class} (3 Synthesized Classes) \\
         \midrule
-        \textbf{Base Dataset} & Water Potability (\texttt{adityakadiwal/water-potability}) \\
-        \textbf{Synthesized Classes} & 0 (Unsafe), 1 (Marginal), 2 (Safe) \\
-        \textbf{Key Preprocessing} & Dropping original \texttt{pH} column to prevent data leakage. \\
+        \textbf{Train Split (80\%)} & $\sim$43,152 rows & 2,620 rows \\
+        \textbf{Test Split (20\%)} & $\sim$10,788 rows & 656 rows \\
+        \midrule
+        \textbf{SMOTE Resampling} & N/A (Regression task) & \textbf{Before SMOTE:} Imbalanced \newline \textbf{After SMOTE:} $\sim$2,667 rows (Balanced 3 Classes) \\
         \bottomrule
-    \end{tabular}
+    \end{tabularx}
+    \caption{Consolidated Dataset Overview, Feature Count, and Train-Test Split Details}
 \end{table}
 
 % ==========================================
@@ -262,38 +233,6 @@ Across both datasets, we applied \textbf{Standardization} via \texttt{StandardSc
 
 \subsection{Anti-Leakage Splitting \& SMOTE}
 Across both datasets, strict chronological processing was enforced. Data was split into Training (80\%) and Testing (20\%) sets \textit{before} scaling or resampling. For the Classification dataset, the \textbf{Synthetic Minority Over-sampling Technique (SMOTE)} was deployed exclusively on the scaled training data. This mathematically interpolated new data points for minority classes, balancing the 'Unsafe', 'Marginal', and 'Safe' tiers perfectly without polluting the testing distribution.
-
-\begin{table}[H]
-    \centering
-    \renewcommand{\arraystretch}{1.3}
-    \begin{tabular}{@{}lcc@{}}
-        \toprule
-        \textbf{Diamonds Dataset Partition} & \textbf{Number of Samples} & \textbf{Percentage} \\
-        \midrule
-        Total Original Dataset & $\sim$53,940 & 100\% \\
-        Training Set & $\sim$43,152 & 80\% \\
-        Testing Set & $\sim$10,788 & 20\% \\
-        \bottomrule
-    \end{tabular}
-    \caption{Dataset Train-Test Split for Continuous Regression}
-\end{table}
-
-\begin{table}[H]
-    \centering
-    \renewcommand{\arraystretch}{1.3}
-    \begin{tabular}{@{}lcc@{}}
-        \toprule
-        \textbf{Water Potability Partition} & \textbf{Number of Samples} & \textbf{Percentage} \\
-        \midrule
-        Total Original Dataset & 3,276 & 100\% \\
-        Training Set (Before SMOTE) & 2,620 & 80\% \\
-        Testing Set & 656 & 20\% \\
-        \midrule
-        \textbf{Training Set (After SMOTE)} & \textbf{$\sim$2,667} & \textbf{Balanced (3 Classes)} \\
-        \bottomrule
-    \end{tabular}
-    \caption{Dataset Train-Test Split and SMOTE Resampling for Classification}
-\end{table}
 % ==========================================
 % 5. MODELS & TRAINING ARCHITECTURE
 % ==========================================
